@@ -139,6 +139,38 @@ class Bomb:
             self.vy *= -1
         self.rct.move_ip(self.vx, self.vy)
         screen.blit(self.img, self.rct)
+        
+
+class Score:
+    """
+    スコア表示を管理するクラス
+    """
+    def __init__(self):
+        # フォント設定（日本語フォント名は環境依存のためSysFontで指定）
+        try:
+            self.fonto = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)
+        except Exception:
+            # フォールバック
+            self.fonto = pg.font.SysFont(None, 30)
+        self.color = (0, 0, 255)
+        self.score = 0
+        # 初期の描画Surface
+        self.img = self.fonto.render(f"スコア: {self.score}", 0, self.color)
+        self.rct = self.img.get_rect()
+        # 画面左下（横100, 下から50）
+        self.rct.center = (100, HEIGHT - 50)
+
+    def update(self, screen: pg.Surface) -> None:
+        """現在のスコアを描画用Surfaceにしてscreenにblitする"""
+        self.img = self.fonto.render(f"スコア: {self.score}", 0, self.color)
+        # 再計算（幅が変わる可能性があるため）
+        self.rct = self.img.get_rect()
+        self.rct.center = (100, HEIGHT - 50)
+        screen.blit(self.img, self.rct)
+
+    def add(self, points: int = 1) -> None:
+        """スコアを加算する"""
+        self.score += points
 
 
 def main():
@@ -152,6 +184,7 @@ def main():
     #     boms.append(Bomb((255, 0, 0), 10))
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]  # リスト内包表記で書くとこうなる
     beam = None  # ゲーム初期化時にはビームは存在しない
+    score = Score()  # スコア管理
     clock = pg.time.Clock()
     tmr = 0
     while True:
@@ -180,6 +213,7 @@ def main():
                     # ビームと爆弾の衝突判定
                     beam, bombs[b] = None, None
                     bird.change_img(6, screen)
+                    score.add(1)
         bombs = [bomb for bomb in bombs if bomb is not None ]
 
         key_lst = pg.key.get_pressed()
@@ -188,6 +222,8 @@ def main():
             beam.update(screen)   
         for bomb in bombs:
             bomb.update(screen)
+        # スコア表示更新
+        score.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
