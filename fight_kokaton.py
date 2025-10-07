@@ -83,8 +83,8 @@ class Bird:
             self.img = __class__.imgs[tuple(sum_mv)]
         screen.blit(self.img, self.rct)
 
+
 class Beam:
-#ビームクラス:
     """
     こうかとんが放つビームに関するクラス
     """
@@ -93,8 +93,8 @@ class Beam:
         ビーム画像Surfaceを生成する
         引数 bird：ビームを放つこうかとん（Birdインスタンス）
         """
-        self.img = pg.image.load(f"fig/beam.png")  # beamsurface
-        self.rct = self.img.get_rect()  # beamrect
+        self.img = pg.image.load(f"fig/beam.png")  # ビームSurface
+        self.rct = self.img.get_rect()  # ビームRect
         self.rct.centery = bird.rct.centery  # こうかとんの中心縦座標
         self.rct.left = bird.rct.right  # こうかとんの右座標
         self.vx, self.vy = +5, 0
@@ -154,26 +154,28 @@ def main():
             if event.type == pg.QUIT:
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
-                 # スペースキー押下でBeamクラスのインスタンス生成
+                # スペースキー押下でBeamクラスのインスタンス生成
                 beam = Beam(bird)            
         screen.blit(bg_img, [0, 0])
         
-        if bird.rct.colliderect(bomb.rct):
-            # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
-            bird.change_img(8, screen)
-            pg.display.update()
-            time.sleep(1)
-            return
+        if bomb is not None:
+            if bird.rct.colliderect(bomb.rct):
+                # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
+                bird.change_img(8, screen)
+                pg.display.update()
+                time.sleep(1)
+                return
         
-        if beam.rct.collderect(bomb.rct):
-            # ビームと爆弾が衝突したら，爆弾を消す
-            bomb = None
-            beam = None
+        if bomb is not None:
+            if beam is not None:
+                if beam.rct.colliderect(bomb.rct):
+                    # ビームと爆弾の衝突判定
+                    beam, bomb  = None, None
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
         if beam is not None:
-            beam.update(screen)
+            beam.update(screen)   
         if bomb is not None:
             bomb.update(screen)
         pg.display.update()
