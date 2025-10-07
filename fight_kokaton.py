@@ -124,8 +124,15 @@ class Bomb:
         pg.draw.circle(self.img, color, (rad, rad), rad)
         self.img.set_colorkey((0, 0, 0))
         self.rct = self.img.get_rect()
-        self.rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)
-        self.vx, self.vy = +5, +5
+        # 画面端ギリギリに生成されないように余白をとる
+        margin = 50
+        self.rct.center = (
+            random.randint(margin, WIDTH - margin),
+            random.randint(margin, HEIGHT - margin),
+        )
+        # 各爆弾の速度をランダムに左右上下に分散させる
+        self.vx = random.choice([-5, +5])
+        self.vy = random.choice([-5, +5])
 
     def update(self, screen: pg.Surface):
         """
@@ -173,6 +180,30 @@ class Score:
         self.score += points
 
 
+class Explosion:
+    """
+    爆発エフェクトを管理するクラス。
+    explosion.gif とその左右反転を交互に表示して爆発を演出する。
+    """
+    def __init__(self, center: tuple[int, int], life: int = 20):
+        # 元画像と左右反転画像を読み込む
+        img = pg.image.load("fig/explosion.gif")
+        flipped = pg.transform.flip(img, True, False)
+        self.imgs = [img, flipped]
+        self.rct = img.get_rect()
+        self.rct.center = center
+        self.life = life
+
+    def update(self, screen: pg.Surface) -> None:
+        """life を1減らし、lifeが正ならimgsを切り替えて描画する"""
+        if self.life <= 0:
+            return
+        # 交互に切り替え（lifeの偶奇で選択）
+        idx = (self.life % 2)
+        screen.blit(self.imgs[idx], self.rct)
+        self.life -= 1
+
+
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))    
@@ -185,6 +216,7 @@ def main():
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]  # リスト内包表記で書くとこうなる
     beams: list[Beam] = []  # 複数ビームを格納するリスト
     score = Score()  # スコア管理
+    explosions: list[Explosion] = []
     clock = pg.time.Clock()
     tmr = 0
     while True:
@@ -219,6 +251,8 @@ def main():
                     bombs[b] = None
                     bird.change_img(6, screen)
                     score.add(1)
+                    # 爆発エフェクトを生成して追加
+                    explosions.append(Explosion(bomb.rct.center))
         bombs = [bomb for bomb in bombs if bomb is not None ]
 
         key_lst = pg.key.get_pressed()
@@ -231,6 +265,10 @@ def main():
         # ビームリストと爆弾リストのクリーンアップ
         beams = [bm for bm in beams if bm is not None and check_bound(bm.rct) == (True, True)]
         bombs = [bomb for bomb in bombs if bomb is not None]
+        # 爆発の更新とクリーンアップ
+        for ex in explosions:
+            ex.update(screen)
+        explosions = [ex for ex in explosions if ex.life > 0]
         for bomb in bombs:
             bomb.update(screen)
         # スコア表示更新
