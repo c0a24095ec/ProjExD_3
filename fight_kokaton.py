@@ -96,6 +96,7 @@ class Beam:
     """
     こうかとんが放つビームに関するクラス
     """
+
     def __init__(self, bird:"Bird"):
         """
         ビーム画像Surfaceを生成する
@@ -142,6 +143,7 @@ class Bomb:
     """
     爆弾に関するクラス
     """
+
     def __init__(self, color: tuple[int, int, int], rad: int):
         """
         引数に基づき爆弾円Surfaceを生成する
@@ -180,6 +182,7 @@ class Score:
     """
     スコア表示を管理するクラス
     """
+
     def __init__(self):
         # フォント設定（日本語フォント名は環境依存のためSysFontで指定）
         try:
